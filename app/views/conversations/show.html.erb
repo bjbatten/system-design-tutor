@@ -13,7 +13,11 @@
 
   <!-- Input form -->
   <%= form_with model: [@conversation, @message], 
-                data: { turbo_frame: "messages" },
+                data: { 
+                  turbo_frame: "messages",
+                  controller: "message-form",
+                  action: "turbo:submit-end->message-form#clearInput"
+                },
                 class: "flex gap-2" do |f| %>
     <%= f.hidden_field :role, value: "user" %>
     <%= f.text_field :content, 

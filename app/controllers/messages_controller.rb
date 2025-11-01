@@ -4,13 +4,17 @@ class MessagesController < ApplicationController
     @message = @conversation.messages.build(message_params)
 
     if @message.save
-      # For now, just echo back
+      # Call Claude API
+      service = SystemDesignService.new
+      ai_response = service.generate_response(@message.content)
+
       @response = @conversation.messages.create!(
         role: "assistant",
-        content: "Echo: #{@message.content}"
+        content: ai_response
       )
 
       @messages = @conversation.messages.order(created_at: :asc)
+
       render turbo_stream: turbo_stream.replace(
         "messages",
         partial: "messages/messages",
