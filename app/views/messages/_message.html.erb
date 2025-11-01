@@ -1,6 +1,24 @@
-<div class="mb-4 <%= message.role == 'user' ? 'text-right' : 'text-left' %>">
-  <div class="inline-block <%= message.role == 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200' %> rounded-lg px-4 py-2 max-w-md">
+<div id="message-<%= message.id %>" class="mb-4 <%= message.role == 'user' ? 'text-right' : 'text-left' %>">
+  <div class="inline-block <%= message.role == 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200' %> rounded-lg px-4 py-2 max-w-3xl">
     <div class="text-xs opacity-75 mb-1"><%= message.role %></div>
-    <div><%= message.content %></div>
+    
+    <% if message.role == 'assistant' && message.content.include?('```mermaid') %>
+      <%# Extract and render mermaid diagrams %>
+      <% parts = message.content.split(/(```mermaid.*?```)/m) %>
+      <% parts.each do |part| %>
+        <% if part.match?(/```mermaid/) %>
+          <% mermaid_code = part.match(/```mermaid\n(.*?)\n```/m)&.captures&.first %>
+          <% if mermaid_code %>
+            <div class="my-4 bg-white p-4 rounded border" data-controller="mermaid">
+              <%= mermaid_code %>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="whitespace-pre-wrap"><%= part.strip %></div>
+        <% end %>
+      <% end %>
+    <% else %>
+      <div class="whitespace-pre-wrap"><%= message.content %></div>
+    <% end %>
   </div>
 </div>

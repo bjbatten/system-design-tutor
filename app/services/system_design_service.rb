@@ -2,14 +2,6 @@ require "net/http"
 require "json"
 
 class SystemDesignService
-  # def initialize
-  #   # Force SSL cert path
-  #   ENV["SSL_CERT_FILE"] = "/opt/homebrew/etc/ca-certificates/cert.pem"
-  #   @client = Anthropic::Client.new(
-  #     api_key: Rails.application.credentials.dig(:anthropic, :api_key)
-  #   )
-  # end
-
   def generate_response(question)
     uri = URI("https://api.anthropic.com/v1/messages")
 
@@ -20,11 +12,20 @@ class SystemDesignService
 
     request.body = {
       model: "claude-sonnet-4-20250514",
-      max_tokens: 1024,
+      max_tokens: 2048,
       messages: [
         {
           role: "user",
-          content: "You are a system design interview tutor. Answer this question concisely: #{question}"
+          content: "You are a system design interview tutor. Answer this question with BOTH a concise explanation AND a mermaid diagram showing the architecture.
+
+CRITICAL: Format the diagram in a ```mermaid code block. Use simple graph syntax like:
+```mermaid
+graph TB
+    A[Component] --> B[Component]
+    B --> C[Component]
+```
+
+Question: #{question}"
         }
       ]
     }.to_json
