@@ -8,6 +8,9 @@ class ConversationsController < ApplicationController
 
   # GET /conversations/1 or /conversations/1.json
   def show
+    @conversation = Conversation.find(params[:id])
+    @messages = @conversation.messages.order(created_at: :asc)
+    @message = Message.new
   end
 
   # GET /conversations/new
