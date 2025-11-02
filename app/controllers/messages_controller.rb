@@ -4,9 +4,15 @@ class MessagesController < ApplicationController
     @message = @conversation.messages.build(message_params)
 
     if @message.save
-      # Call Claude API
+      # Get conversation history (last 10 messages for context)
+      history = @conversation.messages
+                            .order(created_at: :asc)
+                            .last(10)
+                            .map { |m| { role: m.role, content: m.content } }
+
+      # Call Claude API with history
       service = SystemDesignService.new
-      ai_response = service.generate_response(@message.content)
+      ai_response = service.generate_response(@message.content, history)
 
       @response = @conversation.messages.create!(
         role: "assistant",

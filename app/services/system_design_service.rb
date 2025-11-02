@@ -2,7 +2,7 @@ require "net/http"
 require "json"
 
 class SystemDesignService
-  def generate_response(question)
+  def generate_response(question, conversation_history = [])
     uri = URI("https://api.anthropic.com/v1/messages")
 
     request = Net::HTTP::Post.new(uri)
@@ -10,24 +10,25 @@ class SystemDesignService
     request["anthropic-version"] = "2023-06-01"
     request["content-type"] = "application/json"
 
+    # Build messages array with history
+    messages = conversation_history.map do |msg|
+      { role: msg[:role], content: msg[:content] }
+    end
+
+    # Add the new question
+    messages << {
+      role: "user",
+      content: "You are a system design interview tutor. Answer this question with BOTH a concise explanation AND a mermaid diagram showing the architecture.
+
+CRITICAL: Format the diagram in a ```mermaid code block. Use simple graph syntax.
+
+Question: #{question}"
+    }
+
     request.body = {
       model: "claude-sonnet-4-20250514",
       max_tokens: 2048,
-      messages: [
-        {
-          role: "user",
-          content: "You are a system design interview tutor. Answer this question with BOTH a concise explanation AND a mermaid diagram showing the architecture.
-
-CRITICAL: Format the diagram in a ```mermaid code block. Use simple graph syntax like:
-```mermaid
-graph TB
-    A[Component] --> B[Component]
-    B --> C[Component]
-```
-
-Question: #{question}"
-        }
-      ]
+      messages: messages
     }.to_json
 
     response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true, verify_mode: OpenSSL::SSL::VERIFY_NONE) do |http|
