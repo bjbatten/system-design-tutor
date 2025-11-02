@@ -1,7 +1,7 @@
-// Configure your import map in config/importmap.rb. Read more: https://github.com/rails/importmap-rails
 import "@hotwired/turbo-rails"
 import "controllers"
 
+// Manually render all mermaid diagrams
 async function renderAllMermaidDiagrams() {
   console.log('Checking for mermaid diagrams...')
   
@@ -22,11 +22,11 @@ async function renderAllMermaidDiagrams() {
   const mermaidElements = document.querySelectorAll('[data-controller="mermaid"]')
   console.log(`Found ${mermaidElements.length} mermaid elements`)
   
-  mermaidElements.forEach(async (element) => {
+  for (const element of mermaidElements) {
     // Skip if already rendered
     if (element.querySelector('svg')) {
       console.log('Already rendered, skipping')
-      return
+      continue
     }
     
     const code = element.textContent.trim()
@@ -42,16 +42,22 @@ async function renderAllMermaidDiagrams() {
       console.error('Render error:', error)
       element.innerHTML = `<pre class="text-red-500">Error: ${error.message}</pre>`
     }
-  })
+  }
 }
 
-// Render on initial load
+// Render on initial page load
 document.addEventListener('turbo:load', renderAllMermaidDiagrams)
 
-// Render after turbo updates (like form submissions)
-document.addEventListener('turbo:render', renderAllMermaidDiagrams)
+// CRITICAL: Handle Turbo Stream updates (fires after stream actions like replace)
+document.addEventListener('turbo:before-stream-render', async (event) => {
+  // Use setTimeout to ensure DOM is fully updated after the stream renders
+  setTimeout(async () => {
+    await renderAllMermaidDiagrams()
 
-// Also try after a short delay (backup)
-document.addEventListener('turbo:render', () => {
-  setTimeout(renderAllMermaidDiagrams, 500)
+    // Also remove loading bubble when Mermaid finishes rendering
+    const loadingBubble = document.getElementById('loading-bubble')
+    if (loadingBubble) {
+      loadingBubble.remove()
+    }
+  }, 100)
 })
