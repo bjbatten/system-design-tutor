@@ -11,7 +11,11 @@
           <%# This is a mermaid code block %>
           <% mermaid_code = part.match(/```mermaid\n(.*?)\n```/m)&.captures&.first %>
           <% if mermaid_code %>
-            <div class="my-4 bg-white p-4 rounded border" data-controller="mermaid">
+            <!-- Clickable diagram -->
+            <div class="my-4 bg-white p-4 rounded border cursor-pointer hover:shadow-lg transition-shadow" 
+                 data-controller="mermaid"
+                 data-action="click->diagram-modal#open"
+                 title="Click to enlarge">
               <%= mermaid_code.strip %>
             </div>
             
