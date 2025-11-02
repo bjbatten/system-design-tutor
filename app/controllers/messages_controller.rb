@@ -4,8 +4,9 @@ class MessagesController < ApplicationController
     @message = @conversation.messages.build(message_params)
 
     if @message.save
-      # Get conversation history (last 10 messages for context)
+      # Get conversation history EXCLUDING the current message (last 10 messages for context)
       history = @conversation.messages
+                            .where.not(id: @message.id)
                             .order(created_at: :asc)
                             .last(10)
                             .map { |m| { role: m.role, content: m.content } }

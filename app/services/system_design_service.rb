@@ -2,7 +2,36 @@ require "net/http"
 require "json"
 
 class SystemDesignService
+  CACHE_EXPIRY = 7.days
+
   def generate_response(question, conversation_history = [])
+    # Only cache if this is the first question (no history)
+    if conversation_history.empty?
+      cache_key = Message.cache_key_for(question)
+
+      cached_response = Rails.cache.read(cache_key)
+      if cached_response
+        Rails.logger.info "Cache HIT for: #{question[0..50]}..."
+        return cached_response
+      end
+    end
+
+    # No cache hit, call API
+    Rails.logger.info "Cache MISS for: #{question[0..50]}..."
+    response = call_claude_api(question, conversation_history)
+
+    # Cache the response if it's a first question
+    if conversation_history.empty?
+      cache_key = Message.cache_key_for(question)
+      Rails.cache.write(cache_key, response, expires_in: CACHE_EXPIRY)
+    end
+
+    response
+  end
+
+  private
+
+  def call_claude_api(question, conversation_history)
     uri = URI("https://api.anthropic.com/v1/messages")
 
     request = Net::HTTP::Post.new(uri)
